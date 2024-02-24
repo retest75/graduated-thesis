@@ -2,7 +2,7 @@
 #    檢驗兩者是否有高度重疊與包含關係
 # 2. 整理「眼底鏡and睡眠呼吸中止症」以及「眼底鏡匯出報表」
 #    檢驗兩者是否有高度重疊與包含關係
-# 3. 列出各年度眼底影像資料集的完整長度(但目前只有2022)
+# 3. 列出各年度眼底影像資料集的完整長度
 
 import os
 import pandas as pd
@@ -12,6 +12,7 @@ class Check():
     """ 
     1. 整理「眼底鏡and睡眠呼吸中止症」以及「呼吸中止症報表」, 檢驗兩者是否有高度重疊與包含關係
     2. 整理「眼底鏡and睡眠呼吸中止症」以及「眼底鏡匯出報表」, 檢驗兩者是否有高度重疊與包含關係
+    3. 列出各年度所有報表與資料集的數量
     """
     def __init__(self, root, year):
         """
@@ -95,22 +96,30 @@ class Check():
         b = set(self.sleep())
         c = set(self.fun_slp())
 
-        print("----- Size -----")
-        print(f"Size of fundus report: {len(a)}")
-        print(f"Size of sleep report: {len(b)}")
-        print(f"Size of fundus and sleep report: {len(c)}")
-        print(f"Total fundus images: {self.total_img()}")
-        print()
+        #print("----- Size -----")
+        #print(f"Size of fundus report: {len(a)}")
+        #print(f"Size of sleep report: {len(b)}")
+        #print(f"Size of fundus and sleep report: {len(c)}")
+        #print(f"Total fundus images: {self.total_img()}")
+        #print()
 
-        print("----- Association -----")
-        print(f"(fundus) & (fundus and sleep ): {len(a&c):2d}")
-        print(f"(sleep) & (fundus and sleep ):  {len(b&c):2d}")
+        #print("----- Association -----")
+        #print(f"(fundus) & (fundus and sleep ): {len(a&c):2d}")
+        #print(f"(sleep) & (fundus and sleep ):  {len(b&c):2d}")
+        return a, b, c
 
-root = "C:\\graduated\\thesis\\data"
-years = ["2022", "2021", "2020", "2019"]
+
         
 if __name__=="__main__":
+    root = "C:\\graduated\\thesis\\data"
+    years = ["2022", "2021", "2020", "2019", "2018"]
+
+    print(f"| Year | Fundus report(A) | Sleep report(B) | Fundus and Sleep report(C) | A & C | B & C | Total images |")
+    
     for year in years:
-        print(f"Year: {year}")
+        #print(f"Year: {year}")
         check = Check(root, year)
-        print()
+        a, b, c = check.compare()
+        print(f"| {year} |      {len(a):4d}        |       {len(b):3d}       |           {len(c):2d}               |  {len(a&c):2d}   |  {len(b&c):2d}   |    {check.total_img():5d}     |")
+        
+        #print()
