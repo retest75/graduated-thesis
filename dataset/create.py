@@ -9,11 +9,11 @@
 
 
 ##### if you want test this script, unlock this block #####
-#import os
-#import sys
-#current_dir = os.path.dirname(__file__)
-#parent_dir = os.path.dirname(current_dir)
-#sys.path.append(parent_dir)
+import os
+import sys
+current_dir = os.path.dirname(__file__)
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
 #---------------------------------------------------------#
 
 import os
@@ -26,7 +26,7 @@ from clean.image_preprocessing import Image_preprocess
 
 
 class Create_dataset(Dataset):
-    def __init__(self, root, transform=None, mode=None):
+    def __init__(self, root, transform=None, mode=None, stage="train"):
         """ Create a customized dataset 
         
         Parameter
@@ -53,7 +53,7 @@ class Create_dataset(Dataset):
         self.img = [] # image path in sequence
         self.lbl = [] # label in sequence
 
-        self.root = root
+        self.root = os.path.join(root, stage)
         self.transform = transform
 
         self.sides = self.__sides(mode)
@@ -109,15 +109,15 @@ class Create_dataset(Dataset):
 
 
 if __name__ == "__main__":
-    root = "/Users/ChenZE/graduated/thesis/dataset"
+    root = "/home/chenze/graduated/thesis/dataset"
     transform = transforms.Compose([transforms.ToPILImage(),
                                     transforms.Resize((256, 256)),
                                     transforms.ToTensor(),
                                     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
     
-    dataset = Create_dataset(root=root, transform=transform, mode="Both")
+    dataset = Create_dataset(root=root, transform=transform, mode="Left", stage="test")
     
-    for (img, lbl) in DataLoader(dataset=dataset, batch_size=1):
+    for (img, lbl) in DataLoader(dataset=dataset, batch_size=100):
         print(f" {img.size()} | {lbl.size()}")
 
 
