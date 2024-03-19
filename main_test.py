@@ -39,7 +39,7 @@ def train_fn(dataset, batch_size, device, model, optimizer, criterion):
     return epoch_loss, epoch_acc, epoch_param
 
 def test_fn(dataset, batch_size, device, model, optimizer, criterion):
-    """ an eacy testing phase framefork for each epochs """
+    """ an easy testing phase framefork for each epochs """
     
     batch_loss = 0
     batch_correct = 0
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     model = CustomizedResNet50(weights=weights, n_classes=2).to(device)
     optimizer = torch.optim.Adam(model.parameters())
     criterion = torch.nn.CrossEntropyLoss()
-    epochs = 2
+    epochs = 50
 
     train_loss_history = []
     train_acc_history = []
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         train_loss, train_acc, _ = train_fn(dataset=train_ds, batch_size=batsh_size, device=device, model=model, optimizer=optimizer, criterion=criterion)
         test_loss,test_acc = test_fn(dataset=test_ds, batch_size=batsh_size, device=device, model=model, optimizer=optimizer, criterion=criterion)
         print(f"Phase: training | Loss: {train_loss:.6f} | Acc: {100 * train_acc:.2f}%")
-        print(f"Phase: validate | Loss: {test_loss:.6f} | Acc: {100 * test_acc:.2f}%")
+        print(f"Phase: testing  | Loss: {test_loss:.6f} | Acc: {100 * test_acc:.2f}%")
         print()
 
         train_loss_history.append(train_loss)
