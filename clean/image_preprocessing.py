@@ -1,46 +1,57 @@
-# a module of preprocessing for image
-# input a folder name which include images
-# then you can use read_img method to read it and crop method to crop it to square-sized
-# you can utilize some for loops in __init__ method to read and crop also
+# A module of preprocessing for image
+# It contains read, crop and then save the croped image
 
 import os
+import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 
 class Image_preprocess():
-    def __init__(self, path):
-        self.path = path
+    """
+    Parameter
+    ------------
+    src : source directory name and path
+    dst : destinated directory name and path
+    """
+    def __init__(self, src: str, dst: str):
 
-    def read_img(self, img_path):
-        """ Read image and transform to RGB mode """
+        self.src = src
+        self.dst = dst
 
+        # 思考要在物件內部直接進行還是實體化後再進行
+        #for index, filename in enumerate(os.listdir(self.src)):
+        #    img = self.read_img(os.path.join(self.src, filename))
+        #    img = self.crop_img(img)
+        #    self.save_img(img, os.path.join(self.dst, str(index)+".jpg"))
+    
+    def read_img(self, img_path: str):
         img = cv2.imread(img_path)                 # [H, W, C]
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # BGR -> RGB
-        #print(f"Original shape = [{img.shape[0]}, {img.shape[1]}, {img.shape[2]}]")
-        
-        return img
 
-    def crop(self, img):
-        """ Crop image to square where orig shape = [1536, 2304, 3] """
-
-        #img = img[:, 384:1920, :]       # shape: [H W, C] = [1536, 1536, 3]
-        img  = img[36:1500, 420:1884, :] # shape: [H W, C] = [1464, 1464, 3]
-        #print(f"Cropped shape = [{img.shape[0]}, {img.shape[1]}, {img.shape[2]}]")
         return img
+    
+    def crop_img(self, img: np.ndarray):
+        img_croped = img[360:1500, 420:1884, :] # [2304, 1536, 3] -> [1464, 1464, 3]
+
+        return img_croped
+    
+    def save_img(self, img: np.array, dst: str):
+        plt.imsave(dst, img)
+    
 
 
 
 if __name__ == "__main__":
-    root = "/Users/ChenZE/graduated/thesis/dataset/0_normal/Left/137988984_L.jpg"
-    #condition = ["1_disease"]
-    #direction = ["Left", "Right"]
+    src = "C:\\graduated\\thesis\\data\\dataset\\testing-image"
+    dst = None
 
-    #for c in condition:
-    #    for d in direction:
-    #        path = os.path.join(root, c, d)
-    #        preprocess = Image_preprocess(path)
-    preprocess = Image_preprocess(path=None)
-    img = preprocess.crop(preprocess.read_img(root))
-    print(img.shape)
+    # 思考要在物件內部直接進行還是實體化後再進行
+    #ip = Image_preprocess()
+    #for index, filename in enumerate(os.listdir(src)):
+    #    img = ip.read_img(os.path.join(src, filename))
+    #    img = ip.crop_img(img)
+    #    ip.save_img(img, os.path.join(dst, str(index)+".jpg"))
+    
 
 
 
