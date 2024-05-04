@@ -89,7 +89,7 @@ class ResNet50(nn.Module):
     ------------
     num_classes : output classes
     """
-    def __init__(self, num_classes=1000):
+    def __init__(self, num_classes=2048):
         super().__init__()
         self.in_channels = 64
 
@@ -222,8 +222,8 @@ class Predictor(nn.Module):
 if __name__ == "__main__":
     #model = ResNet50()
 #    model = SimSiam(ResNet50())
-    model = SimSiam(resnet50())
-    print(model)
+#    model = SimSiam(resnet50())
+#    print(model)
     
 
     #encoder = nn.Sequential(model)
