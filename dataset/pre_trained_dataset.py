@@ -1,5 +1,6 @@
-# This dataset used to pre-trained model of SimSiam Network
-# It will produce two views for one image
+# This dataset be used to pre-trained model of SimSiam Network
+# It include an Gaussian Blur augmentation which did not be contain in PyTorch
+# This dataset will produce two views for one image
 # 使用方式參照下方 if __name__ == "__main__" 的設計
 # 務必要經過 TwoCropTransforms() 才會產生兩個視圖
 # Augmentation reference
@@ -57,6 +58,7 @@ class PreTrainedDataset(Dataset):
         else:
             return ["Left", "Right"]
 
+
 class TwoCropTransforms():
     def __init__(self, base_transform):
         self.base_transform = base_transform
@@ -66,6 +68,7 @@ class TwoCropTransforms():
         x2 = self.base_transform(x)
 
         return [x1, x2]
+
 
 class GaussianBlur():
     def __init__(self, sigma=[.1, .2]):
