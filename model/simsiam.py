@@ -10,8 +10,8 @@ class SimSiam(nn.Module):
         super().__init__()
 
         # encoder寫法(1): 可以看出完整的網路架構
-        backbone.fc.out_features = 2048
-        self.encoder = nn.Sequential(backbone, Projection(backbone.fc.out_features))
+        #backbone.fc.out_features = 2048
+        self.encoder = nn.Sequential(backbone, Projection())
         
         # encoder寫法(2): 打印網路架構不對，但不影響輸出結果
         #self.backbone = backbone
@@ -169,7 +169,7 @@ class Projection(nn.Module):
     Each fc layer do not use bias since it followed by BN
     """
 
-    def __init__(self, in_dim, hidden_dim=2048, out_dim=2048):
+    def __init__(self, in_dim=2048, hidden_dim=2048, out_dim=2048):
         super().__init__()
 
         self.layer1 = nn.Sequential(
@@ -221,9 +221,9 @@ class Predictor(nn.Module):
 
 if __name__ == "__main__":
     #model = ResNet50()
-#    model = SimSiam(ResNet50())
-#    model = SimSiam(resnet50())
-#    print(model)
+    #model = SimSiam(ResNet50())
+    model = SimSiam(resnet50())
+    print(model)
     
 
     #encoder = nn.Sequential(model)
