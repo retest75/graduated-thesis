@@ -1,112 +1,126 @@
-import time
+import math
+import os
+import matplotlib.pyplot as plt
+
+
 import torch
-from torch.utils.data import DataLoader
-from torchvision.models import ResNet50_Weights
+import torch.nn as nn
+import torch.optim as optim
+import torchvision
 from torchvision import transforms
-from dataset.create import Create_dataset
-from baseline.resnet_modified import CustomizedResNet50
+from torch.utils.data import DataLoader
 
+from model.resnet50 import CustomizedResnet50
+from model.simsiam import SimSiam
+from dataset.pre_trained_dataset import GaussianBlur, TwoCropTransforms, PreTrainedDataset
+from train.ssl_train import Training
 
-
-
-def train_fn(dataset, batch_size, device, model, optimizer, criterion):
-    """ an simple training phase framswork for an epochs """
-
-    batch_loss = 0
-    batch_correct = 0
-
-    model.train()
-    for img, lbl in DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True):
-        img, lbl = img.to(device), lbl.to(device)
-
-        output = model(img)
-        
-        optimizer.zero_grad()
-        loss = criterion(output, lbl)
-
-        _, pred = torch.max(output, 1)
-
-        loss.backward()
-        optimizer.step()
-
-        batch_loss += loss.item() * img.size(0)
-        batch_correct += torch.sum(pred == lbl.data)
-    
-    epoch_loss = batch_loss / len(dataset)
-    epoch_acc = batch_correct.float() / len(dataset)
-    epoch_param = model.state_dict()
-
-    return epoch_loss, epoch_acc, epoch_param
-
-def test_fn(dataset, batch_size, device, model, optimizer, criterion):
-    """ an easy testing phase framefork for each epochs """
-    
-    batch_loss = 0
-    batch_correct = 0
-
-    model.eval()
-    with torch.no_grad():
-        for img, lbl in DataLoader(dataset, batch_size, shuffle=False):
-            img, lbl = img.to(device), lbl.to(device)
-
-            output = model(img)
-            loss = criterion(output, lbl)
-
-            _, pred = torch.max(output, 1)
-            
-            batch_loss += loss.item() * img.size(0)
-            batch_correct += torch.sum(pred == lbl.data)
-        
-    epoch_loss = batch_loss / len(dataset)
-    epoch_acc = batch_correct.float() / len(dataset)
-
-    return epoch_loss, epoch_acc
-
+#----- Environment information -----#
+print("========== Environment information ==========")
+print(f"Torch version: {torch.__version__}")
+print(f"Torchvision version: {torchvision.__version__}")
+print(f"Device name: {torch.cuda.get_device_name()}")
+print()
+#-----------------------------------#
+print("============== Start Training ===============")
 
 if __name__ == "__main__":
-    root = "../dataset"
-    transform = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize((256,256)),
+
+    # basic configuration
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    batch_size = 128
+    Epochs = 2
+    lr = 0.00625
+    momentum=0.9
+    weight_decay=0.0001
+
+    # record setting (設定實驗紀錄的儲存路徑與 log 檔)
+    record_path = "C:\\graduated\\thesis\\record\\SimSiam(ResNet50)"
+    phase = "Pre_train"
+    model_name = "SimSiam(ResNet50)"
+    optimize = "SGD"
+
+
+    # augmentation
+    augmentation = [
+        transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
+        transforms.RandomApply([
+            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
+        ], p=0.8),
+        transforms.RandomGrayscale(p=0.2),
+        transforms.RandomApply([GaussianBlur()], p=0.5),
+        transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
-    train_ds = Create_dataset(root=root, transform=transform, mode="Left", stage="train")
-    test_ds = Create_dataset(root=root, transform=transform, mode="Left", stage="test")
-    #count = 0
-    #for img, lbl in DataLoader(dataset, batch_size=100, shuffle=False):
-    #    print(f"img size: {img.size()} | lbl = {lbl}, size = {lbl.size()}")
-    #    count += img.size(0)
-    #print(count)
-    batsh_size = 32
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    weights = ResNet50_Weights.DEFAULT
-    model = CustomizedResNet50(weights=weights, n_classes=2).to(device)
-    optimizer = torch.optim.Adam(model.parameters())
-    criterion = torch.nn.CrossEntropyLoss()
-    epochs = 50
+        ]
 
-    train_loss_history = []
-    train_acc_history = []
-    test_loss_history = []
-    test_acc_history = []
-    since = time.time()
-    for epoch in range(epochs):
-        print(f"Epochs: {epoch+1}/{epochs}")
-        print("-" * 15)
-        train_loss, train_acc, _ = train_fn(dataset=train_ds, batch_size=batsh_size, device=device, model=model, optimizer=optimizer, criterion=criterion)
-        test_loss,test_acc = test_fn(dataset=test_ds, batch_size=batsh_size, device=device, model=model, optimizer=optimizer, criterion=criterion)
-        print(f"Phase: training | Loss: {train_loss:.6f} | Acc: {100 * train_acc:.2f}%")
-        print(f"Phase: testing  | Loss: {test_loss:.6f} | Acc: {100 * test_acc:.2f}%")
-        print()
+    # dataset
+    root = "C:\\graduated\\thesis\\data\\dataset\\testing-image\\pre_trained"
+    transform = transforms.Compose(augmentation)
+    dataset = PreTrainedDataset(root, TwoCropTransforms(transform), mode="both")
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-        train_loss_history.append(train_loss)
-        train_acc_history.append(train_acc)
-        test_loss_history.append(test_loss)
-        test_acc_history.append(test_acc)
+    # model
+    model = SimSiam(CustomizedResnet50())
+    model = model.to(device)
+
+    # criterion
+    criterion = nn.CosineSimilarity()
+
+    # optimizer and scheduler
+    optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
+    lr_lambda = lambda epoch: 0.5 * (1 + math.cos(epoch * math.pi / Epochs))
+    scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
+
+    # training
+    simsiam = Training(device, model, dataset, dataloader, criterion, optimizer, scheduler)
+
+    history_loss = []
+    history_time = 0
+    best_loss = float("inf")
+    best_param = None
+    best_epoch = None
     
-    times = int(time.time() - since)
-    print(f"training time: {times//3600}h {times//60%60}min {times%60}sec")
 
+    for epoch in range(Epochs):
+        epoch_loss, epoch_time = simsiam.train_fn(epoch)
 
+        history_loss.append(epoch_loss)
+        history_time += epoch_time
 
+        # find best parameter
+        if epoch_loss < best_loss:
+            best_epoch = epoch
+            best_loss = epoch_loss
+            best_param = simsiam.model.state_dict()
+
+        # save checkpoint
+        if (epoch+1) % 2 == 0:
+            simsiam.save_checkpoint(record_path, phase, epoch)
+
+        # save record
+        simsiam.save_log(os.path.join(record_path, "record.log"), model_name, phase, optimize, epoch, Epochs)
+
+        # print training information for each epoch
+        print("=" * 20)
+        print(f"Epoch: {epoch+1}/{Epochs} | Loss: {epoch_loss:.6f} | Times: {epoch_time} sec")
+        print("=" * 20)
+    
+    # save best parameter and entire training loss
+    simsiam.save_checkpoint(record_path,"Pre_train", best_epoch, best_param)
+    simsiam.save_loss(os.path.join(record_path, "loss.log"))
+    print(f"Training Complete ! Times: {history_time//3600} hr {history_time//60%60} min {history_time%60} sec")
+
+    # plot loss and learning rate
+    plt.plot(range(1, Epochs+1), history_loss, label="Loss")
+    plt.xticks(range(1, Epochs+1))
+    plt.legend()
+    plt.title(f"Loss of {model_name}-{phase}")
+    plt.savefig(os.path.join(record_path, "loss.png"))
+    
+    plt.clf()
+    plt.plot(range(1, Epochs+1), simsiam.lr, label="Learnint rate")
+    plt.xticks(range(1, Epochs+1))
+    plt.legend()
+    plt.title(f"Learning rate of {model_name}-{phase}")
+    plt.savefig(os.path.join(record_path, "learning-rate.png"))
