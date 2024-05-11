@@ -25,14 +25,20 @@ print()
 print("============== Start Training ===============")
 
 if __name__ == "__main__":
-
+    #---------- README ----------#
+    # (1) before training, setup "basic configuration
+    # (2) before training, setup "record setting"
+    # (3) before training, setup dataset path in dataset comment
+    # (4) if want to change other backbone, revise model comment
+    #----------------------------#
+    
     # basic configuration
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     batch_size = 128
     Epochs = 2
     lr = 0.00625
-    momentum=0.9
-    weight_decay=0.0001
+    momentum = 0.9
+    weight_decay = 0.0001
 
     # record setting (設定實驗紀錄的儲存路徑與 log 檔)
     record_path = "C:\\graduated\\thesis\\record\\SimSiam(ResNet50)"
