@@ -15,6 +15,13 @@ from torch.utils.data import Dataset
 
 class PreTrainedDataset(Dataset):
     def __init__(self, root, transform, mode="both"):
+        """
+        Parameter
+        ------------
+        root      : root directory to pre-trained dataset
+        transform : transformation function used to generate two view for one input image
+        mode      : setup eyes, only for "Both", "Left", and "Right"
+        """
         super().__init__()
 
         # attribute setup
