@@ -17,21 +17,24 @@ class PreTrainedDataset(Dataset):
     def __init__(self, root, transform, mode="both"):
         super().__init__()
 
-        self.transform = transform
+        # attribute setup
+        self.classes = {"0_normal":0, "1_disease":1}
         self.img = [] # save all image path
         self.lbl = [] # save all label name
+        self.transform = transform
 
-        for side in self._sides(mode):
-            path = os.path.join(root, side)
+        for category in self.classes.keys():
+            for side in self._sides(mode):
+                path = os.path.join(root, category, side) # Ex: /dataset/0_normal/Left
 
-            for filename in os.listdir(path):
-                self.img.append(f"{path}/{filename}")
-                self.lbl.append(side)
+                for filename in os.listdir(path):
+                    self.img.append(f"{path}/{filename}")
+                    self.lbl.append(self.classes[category])
     
     def __getitem__(self, index):
         """
         The return type is a list which include two item.
-        Each item is a [B, C, H, W] tensor, you can use img[0] and img[1] to see each views of an image.
+        Each item is a [B, C, H, W] tensor, you can use img[0] and img[1] to see each views of input image.
         """
         img_path = self.img[index]
         lbl_name = self.lbl[index]
@@ -106,3 +109,9 @@ if __name__ == "__main__":
 #            print(img[0].shape, img[1].shape)
 #            print()
     print(f"dataset length: {dataset.__len__()}")
+    # print(len(dataset.lbl))
+    count = 0
+    for lbl in dataset.lbl:
+        if lbl == 1:
+            count += 1
+    print(count)
