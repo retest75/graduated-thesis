@@ -3,7 +3,7 @@ import os
 import torch
 
 class Training():
-    def __init__(self, device, model, dataset, dataloader, criterion, optimizer, scheduler=None):
+    def __init__(self, device, model, dataset, dataloader, criterion, optimizer, scheduler):
         self.device = device
         self.model = model
         self.dataset = dataset
