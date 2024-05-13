@@ -26,22 +26,24 @@ print("============== Start Training ===============")
 
 if __name__ == "__main__":
     #---------- README ----------#
-    # (1) before training, setup "basic configuration
-    # (2) before training, setup "record setting"
-    # (3) before training, setup dataset path in dataset comment
-    # (4) if want to change other backbone, revise model comment
+    # (1) before training, setup "basic configuration            (Line: 36)
+    # (2) before training, setup "record setting"                (Line: 45)
+    # (3) before training, setup dataset path in dataset comment (Line: 65)
+    # (4) before training, setup "save checkpoint" comment       (Line: 105)
+    # (5) if want to change other backbone, revise model comment (Line: 71)
     #----------------------------#
     
     # basic configuration
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     batch_size = 128
-    Epochs = 2
-    lr = 0.00625
+    Epochs = 100
+    lr_base = 0.05
+    lr = (lr_base * batch_size) / 256
     momentum = 0.9
     weight_decay = 0.0001
 
     # record setting (設定實驗紀錄的儲存路徑與 log 檔)
-    record_path = "C:\\graduated\\thesis\\record\\SimSiam(ResNet50)"
+    record_path = "/home/chenze/graduated/thesis/record/SimSiam(ResNet50)"
     phase = "Pre_train"
     model_name = "SimSiam(ResNet50)"
     optimize = "SGD"
@@ -61,7 +63,7 @@ if __name__ == "__main__":
         ]
 
     # dataset
-    root = "C:\\graduated\\thesis\\data\\dataset\\testing-image\\pre_trained"
+    root = "/home/chenze/graduated/thesis/dataset/pre_trained"
     transform = transforms.Compose(augmentation)
     dataset = PreTrainedDataset(root, TwoCropTransforms(transform), mode="both")
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
@@ -101,7 +103,7 @@ if __name__ == "__main__":
             best_param = simsiam.model.state_dict()
 
         # save checkpoint
-        if (epoch+1) % 2 == 0:
+        if (epoch+1) % 30 == 0:
             simsiam.save_checkpoint(record_path, phase, epoch)
 
         # save record
@@ -119,14 +121,14 @@ if __name__ == "__main__":
 
     # plot loss and learning rate
     plt.plot(range(1, Epochs+1), history_loss, label="Loss")
-    plt.xticks(range(1, Epochs+1))
+    #plt.xticks(range(1, Epochs+1))
     plt.legend()
-    plt.title(f"Loss of {model_name}-{phase}")
+    plt.title(f"Pre-trained Loss of {model_name}")
     plt.savefig(os.path.join(record_path, "loss.png"))
     
     plt.clf()
     plt.plot(range(1, Epochs+1), simsiam.lr, label="Learnint rate")
-    plt.xticks(range(1, Epochs+1))
+    #plt.xticks(range(1, Epochs+1))
     plt.legend()
-    plt.title(f"Learning rate of {model_name}-{phase}")
+    plt.title(f"Pre-trained Learning Rate of {model_name}")
     plt.savefig(os.path.join(record_path, "learning-rate.png"))
