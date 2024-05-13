@@ -5,6 +5,7 @@ from torch.utils.data import Dataset
 class EvaluationDataset(Dataset):
     def __init__(self, root, transform=None, mode=None):
         """ Create a evaluation dataset  to fine-tune or linear probe
+        
         Parameter
         ------------
         mode : str, only for "Left", "Right" or "Both"
