@@ -72,7 +72,3 @@ if __name__ == "__main__":
     
     for (img, lbl) in DataLoader(dataset=dataset, batch_size=100):
         print(f" {img.size()} | {lbl.size()}")
-
-
-
-
