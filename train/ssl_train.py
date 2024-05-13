@@ -34,7 +34,7 @@ class Training():
             # compute loss
             loss = -(self.criterion(p1, z2).mean() + self.criterion(p2, z1).mean()) * 0.5
 
-            # backward-prppagation
+            # backward-propagation
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
