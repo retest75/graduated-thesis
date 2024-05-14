@@ -17,5 +17,17 @@ class CustomizedResnet50(nn.Module):
     def forward(self, x):
         return self.resnet(x)
 
+class CustomizedEfficientNetB4(nn.Module):
+    def __init__(self, num_classes=2048):
+        super().__init__()
+
+        self.efficientnetb4 = models.efficientnet_b4()
+
+        # modified last fc layer
+        in_features = self.efficientnetb4.classifier[1].in_features # 1792
+        self.efficientnetb4.classifier[1] = nn.Linear(in_features, num_classes)
+
+    def forward(self, x):
+        return self.efficientnetb4(x)
         
         
