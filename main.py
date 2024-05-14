@@ -10,7 +10,7 @@ import torchvision
 from torchvision import transforms
 from torch.utils.data import DataLoader
 
-from model.resnet50 import CustomizedResnet50
+from model.backbone import CustomizedResnet50
 from model.simsiam import SimSiam
 from dataset.pre_trained_dataset import GaussianBlur, TwoCropTransforms, PreTrainedDataset
 from train.ssl_train import Training
@@ -63,7 +63,7 @@ if __name__ == "__main__":
         ]
 
     # dataset
-    root = "/home/chenze/graduated/thesis/dataset/pre_trained"
+    root = "/home/chenze/graduated/thesis/dataset/pre-trained"
     transform = transforms.Compose(augmentation)
     dataset = PreTrainedDataset(root, TwoCropTransforms(transform), mode="both")
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
