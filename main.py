@@ -127,7 +127,7 @@ if __name__ == "__main__":
     plt.savefig(os.path.join(record_path, "loss.png"))
     
     plt.clf()
-    plt.plot(range(1, Epochs+1), simsiam.lr, label="Learnint rate")
+    plt.plot(range(1, Epochs+1), simsiam.lr, label="Learning rate")
     #plt.xticks(range(1, Epochs+1))
     plt.legend()
     plt.title(f"Pre-trained Learning Rate of {model_name}")
