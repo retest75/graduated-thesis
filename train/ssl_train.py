@@ -136,7 +136,6 @@ class Evaluation(Training):
         for (img, lbl) in self.dataloader:
             img = img.to(self.device)
             lbl = lbl.to(self.device)
-            print(img.size(0))
 
             # forward-propagation
             output = self.model(img) # output size: [batch, classes], by default classes = 2
