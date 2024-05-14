@@ -160,6 +160,10 @@ class Evaluation(Training):
             # print imformation in batch
             print(f"Epoch: [{epoch}] [{total_len:4d}/{self.len} | Loss: {cur_loss:.6f}]")
         
+        # learning rate decay
+        self.lr.append(self.scheduler.get_last_lr())
+        self.scheduler.step()
+        
         # compute loss, acc and time
         epoch_loss = total_loss / total_len
         epoch_acc = correct / self.len
