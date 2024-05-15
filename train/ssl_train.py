@@ -67,12 +67,6 @@ class Training():
             dst = os.path.join(path, f"{phase}-Epoch[{(epoch+1):02d}]-Loss[{self.loss[epoch]:.6f}].pt")
             param = self.model.state_dict()
             torch.save(param, dst)
-    
-    def get_param(self):
-        """ get hyper-parameter of optimizer """
-        groups = self.optimizer.param_groups[0]
-        
-        return groups["initial_lr"], groups["momentum"], groups["weight_decay"]
 
     def save_log(self, file: str, model_name: str, phase: str, optim: str, epoch: int, Epoch: int):
         """ save experiment log in epoch
@@ -81,14 +75,12 @@ class Training():
         epoch : int, current epoch
         Epoch : int, entire training epoch
         """
-        lr, momentum, weight_decay = self.get_param()
         with open(file, mode="a") as f:
             if (epoch+1) == 1:
                 f.write("======== Basic configuration ========\n")
                 f.write(f"Model: {model_name}\n")
                 f.write(f"Phase: {phase}\n")
                 f.write(f"Optimizer: {optim}\n")
-                f.write(f"Learing rate = {lr}, Momentun = {momentum}, Weight decay = {weight_decay}\n")
                 f.write("=====================================\n")
                 f.write(f"Epoch: {epoch+1}/{Epoch} | Loss: {self.loss[epoch]:.6f}\n")
             else:
@@ -166,7 +158,7 @@ class Evaluation(Training):
         
         # compute loss, acc and time
         epoch_loss = total_loss / total_len
-        epoch_acc = correct / self.len
+        epoch_acc = correct.item() / self.len
         epoch_time = int(time.time() - since)
 
         self.loss.append(epoch_loss)
@@ -182,14 +174,12 @@ class Evaluation(Training):
         epoch : int, current epoch
         Epoch : int, entire training epoch
         """
-        lr, momentum, weight_decay = self.get_param()
         with open(file, mode="a") as f:
             if (epoch+1) == 1:
                 f.write("======== Basic configuration ========\n")
                 f.write(f"Model: {model_name}\n")
                 f.write(f"Phase: {phase}\n")
                 f.write(f"Optimizer: {optim}\n")
-                f.write(f"Learing rate = {lr}, Momentun = {momentum}, Weight decay = {weight_decay}\n")
                 f.write("=====================================\n")
                 f.write(f"Epoch: {epoch+1}/{Epoch} | Loss: {self.loss[epoch]:.6f} | Acc: {self.acc[epoch]*100:.2f}%\n")
             else:
