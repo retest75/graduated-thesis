@@ -1,5 +1,9 @@
 import time
 import os
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import sklearn.metrics as metrics
 import torch
 
 class Training():
@@ -190,3 +194,111 @@ class Evaluation(Training):
         with open(file, mode="a") as f:
             for acc in self.acc:
                 f.write(f"{acc}, ")
+
+class Testing(Evaluation):
+    """ Inherit Evaluation class and use to testing. """
+    def __init__(self, device, model, dataset, dataloader, criterion, optimizer=None, scheduler=None):
+        super().__init__(device, model, dataset, dataloader, criterion, optimizer, scheduler)
+        #---------- inherit these attributes ----------#
+        # self.device = device
+        # self.model = model
+        # self.dataset = dataset
+        # self.dataloader = dataloader
+        # self.criterion = criterion
+        # self.optimizer = optimizer
+        # self.scheduler = scheduler
+
+        # self.len = self.dataset.__len__() # length of  testing dataset
+        # self.loss = []                    # evaluation loss
+        # self.lr = []                      # testing learning rate(備用)
+        # self.acc = []                     # testing acc
+        #----------------------------------------------#
+        
+        self.y_prob = np.array([], dtype=np.float32) # predicted probability
+        self.y_pred = np.array([], dtype=int)        # predicted label
+        self.y_true = np.array([], dtype=int)        # true label
+    
+    def test_fn(self):
+        total_loss = 0.0
+        total_len = 0
+        corrects = 0
+
+        self.model.eval()
+        with torch.no_grad():
+            for img, lbl in self.dataloader:
+                img, lbl = img.to(self.device), lbl.to(self.device)
+
+                # forward-propagation
+                output = self.model(img)
+
+                # compute loss
+                loss = self.criterion(output, lbl)
+                total_loss += loss.item() * img.size(0)
+
+                # compute corrects and y_pred
+                _, pred = torch.max(output, 1)
+                corrects += torch.sum(pred == lbl.data)
+                pred = pred.cpu().numpy()
+                self.y_pred = np.concatenate([self.y_pred, pred])
+
+                # compute y_prob
+                prob = torch.softmax(output, dim=1)
+                prob = prob[:, 1].cpu().numpy()
+                self.y_prob = np.concatenate([self.y_prob, prob])
+
+                # compute y_true
+                true = lbl.cpu().numpy()
+                self.y_true = np.concatenate([self.y_true, true])
+
+                # print testing information in batch
+                total_len += img.size(0)
+                cur_loss = total_loss / total_len
+                print(f"Batch: [{total_len:4d}/{self.len} | Loss: {cur_loss:.6f}]")
+
+            # compute total loss and acc
+            self.loss = total_loss / self.len
+            self.acc = corrects.item() / self.len
+
+        return self.loss, self.acc, self.y_pred, self.y_prob
+    
+    def confusion_matrix(self, pth):
+        self.matrix = metrics.confusion_matrix(self.y_true, self.y_pred)
+        ax = sns.heatmap(self.matrix, annot=True, xticklabels=['0', '1'], yticklabels=['0', '1'], cmap="OrRd")
+        ax.set_title("Confusion matrix")
+        ax.set_xlabel("Predict")
+        ax.set_ylabel("True")
+        plt.tight_layout()
+        plt.savefig(os.path.join(pth, "confusion-matrix.png"))
+        # plt.show()
+        plt.clf()
+    
+    def compute_fscore(self):
+        return metrics.f1_score(self.y_true, self.y_pred)
+    
+    def compute_pr_curve(self, pth):
+        self.precision, self.recall, _ = metrics.precision_recall_curve(self.y_true, self.y_prob)
+
+        # plot P-R curve
+        plt.plot(self.recall, self.precision)
+        plt.title("P-R curve")
+        plt.xlabel("Recall")
+        plt.ylabel("Precision")
+        plt.savefig(os.path.join(pth, "pr-curve.png"))
+        # plt.show()
+        plt.clf()
+    
+    def compute_roc(self, pth):
+        self.fpr, self.tpr, _ = metrics.roc_curve(self.y_true, self.y_prob)
+        self.auc = metrics.roc_auc_score(self.y_true, self.y_prob)
+
+        # plot ROC curve
+        plt.plot(self.fpr, self.tpr, label=f"AUC = {self.auc:.2f}")
+        plt.plot([0, 1], [0, 1], color="red", linestyle="--", label="Random classifier")
+        plt.title("ROC curve")
+        plt.legend()
+        plt.xlabel("FPR")
+        plt.ylabel("TPR")
+        plt.savefig(os.path.join(pth, "roc.png"))
+        # plt.show()
+        plt.clf()
+        
