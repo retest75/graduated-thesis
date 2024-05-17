@@ -8,7 +8,7 @@ class CustomizedResnet50(nn.Module):
     def __init__(self, num_classes=2048):
         super().__init__()
 
-        self.resnet = models.resnet50()
+        self.resnet = models.resnet50(zero_init_residual=True)
 
         # modified last fc layer
         in_features = self.resnet.fc.in_features # 2048
