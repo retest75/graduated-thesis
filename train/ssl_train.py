@@ -292,6 +292,12 @@ class Testing(Evaluation):
     def compute_fscore(self):
         return metrics.f1_score(self.y_true, self.y_pred)
     
+    def compute_precision(self):
+        return metrics.precision_score(self.y_true, self.y_pred)
+    
+    def compute_recall(self):
+        return metrics.recall_score(self.y_true, self.y_pred)
+    
     def compute_pr_curve(self, pth):
         self.precision, self.recall, _ = metrics.precision_recall_curve(self.y_true, self.y_prob)
 
