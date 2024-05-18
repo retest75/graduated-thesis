@@ -270,7 +270,7 @@ class Testing(Evaluation):
                 # print testing information in batch
                 total_len += img.size(0)
                 cur_loss = total_loss / total_len
-                print(f"Batch: [{total_len:4d}/{self.len} | Loss: {cur_loss:.6f}]")
+                print(f"Batch: [{total_len:4d}/{self.len}] | Loss: {cur_loss:.6f}")
 
             # compute total loss and acc
             self.loss = total_loss / self.len
