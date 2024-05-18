@@ -119,7 +119,8 @@ class Evaluation(Training):
         # self.lr = []                      # evaluation learning rate(備用)
         #----------------------------------------------#
 
-        self.acc = []                       # acc
+        self.acc = []      # acc
+        self.fscore = []   # F-1 score
 
     def eval_fn(self, epoch):
         """ use fine-tune or linear probe to supervised learning """
@@ -127,6 +128,9 @@ class Evaluation(Training):
         total_loss = 0.0
         total_len = 0
         correct = 0
+
+        y_pred = np.array([], dtype=int)
+        y_true = np.array([], dtype=int)
 
         self.model.train()
         for (img, lbl) in self.dataloader:
@@ -153,22 +157,28 @@ class Evaluation(Training):
             total_len += img.size(0)
             cur_loss = total_loss / total_len
 
+            # compute y_pred and y_true
+            y_pred = np.concatenate([y_pred, pred.cpu().numpy()])
+            y_true = np.concatenate([y_true, lbl.cpu().numpy()])
+
             # print imformation in batch
-            print(f"Epoch: [{epoch}] [{total_len:4d}/{self.len} | Loss: {cur_loss:.6f}]")
+            print(f"Epoch: [{epoch}] [{total_len:4d}/{self.len}] | Loss: {cur_loss:.6f}")
         
         # learning rate decay
         self.lr.append(self.scheduler.get_last_lr())
         self.scheduler.step()
         
-        # compute loss, acc and time
+        # compute loss, acc, f-score, and time
         epoch_loss = total_loss / total_len
         epoch_acc = correct.item() / self.len
+        epoch_fscore = metrics.f1_score(y_true, y_pred)
         epoch_time = int(time.time() - since)
 
         self.loss.append(epoch_loss)
         self.acc.append(epoch_acc)
+        self.fscore.append(epoch_fscore)
         
-        return epoch_loss, epoch_acc, epoch_time
+        return epoch_loss, epoch_acc, epoch_fscore, epoch_time
 
     def save_log(self, file: str, model_name: str, phase: str, optim: str, epoch: int, Epoch: int):
         """ save experiment log in epoch
@@ -185,15 +195,22 @@ class Evaluation(Training):
                 f.write(f"Phase: {phase}\n")
                 f.write(f"Optimizer: {optim}\n")
                 f.write("=====================================\n")
-                f.write(f"Epoch: {epoch+1}/{Epoch} | Loss: {self.loss[epoch]:.6f} | Acc: {self.acc[epoch]*100:.2f}%\n")
+                f.write(f"Epoch: {epoch+1}/{Epoch} | Loss: {self.loss[epoch]:.6f} | F-1 score: {self.fscore[epoch]:.2f} | Acc: {self.acc[epoch]*100:.2f}%\n")
             else:
-                f.write(f"Epoch: {epoch+1}/{Epoch} | Loss: {self.loss[epoch]:.6f} | Acc: {self.acc[epoch]*100:.2f}%\n")
+                f.write(f"Epoch: {epoch+1}/{Epoch} | Loss: {self.loss[epoch]:.6f} | F-1 score: {self.fscore[epoch]:.2f} | Acc: {self.acc[epoch]*100:.2f}%\n")
 
     def save_acc(self, file: str):
         """ save entire acc """
         with open(file, mode="a") as f:
             for acc in self.acc:
                 f.write(f"{acc}, ")
+    
+    def save_fscore(self, file: str):
+        """ save entire F-1 socre """
+        with open(file, mode="a") as f:
+            for fscore in self.fscore:
+                f.write(f"{fscore}, ")
+    
 
 class Testing(Evaluation):
     """ Inherit Evaluation class and use to testing. """
