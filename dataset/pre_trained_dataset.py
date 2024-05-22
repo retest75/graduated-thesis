@@ -14,18 +14,22 @@ from PIL import Image, ImageFilter
 from torch.utils.data import Dataset
 
 class PreTrainedDataset(Dataset):
-    def __init__(self, root, transform, mode="both"):
+    def __init__(self, root, transform, mode="both", classes=None):
         """
         Parameter
         ------------
         root      : root directory to pre-trained dataset
         transform : transformation function used to generate two view for one input image
         mode      : setup eyes, only for "Both", "Left", and "Right"
+        classes   : select if the dataset include positive image, default: negative and positive
         """
         super().__init__()
 
         # attribute setup
-        self.classes = {"0_normal":0, "1_disease":1}
+        if classes:
+            self.classes = {"0_normal":0}
+        else:
+            self.classes = {"0_normal":0, "1_disease":1}
         self.img = [] # save all image path
         self.lbl = [] # save all label name
         self.transform = transform
