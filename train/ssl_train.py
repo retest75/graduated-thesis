@@ -179,6 +179,16 @@ class Evaluation(Training):
         self.fscore.append(epoch_fscore)
         
         return epoch_loss, epoch_acc, epoch_fscore, epoch_time
+    
+    def save_checkpoint(self, path: str, phase: str, epoch: int, best_param=None):
+        """ save checkpoint or best parameter """
+        if best_param:
+            dst = os.path.join(path, f"{phase}-Epoch[{(epoch+1):02d}]-Loss[{self.loss[epoch]:.6f}]-Fscore[{self.fscore[epoch]:.3f}](Best).pt")
+            torch.save(best_param, dst)
+        else:
+            dst = os.path.join(path, f"{phase}-Epoch[{(epoch+1):02d}]-Loss[{self.loss[epoch]:.6f}]-Fscore[{self.fscore[epoch]:.3f}].pt")
+            param = self.model.state_dict()
+            torch.save(param, dst)
 
     def save_log(self, file: str, model_name: str, phase: str, optim: str, epoch: int, Epoch: int):
         """ save experiment log in epoch
@@ -195,9 +205,9 @@ class Evaluation(Training):
                 f.write(f"Phase: {phase}\n")
                 f.write(f"Optimizer: {optim}\n")
                 f.write("=====================================\n")
-                f.write(f"Epoch: {epoch+1}/{Epoch} | Loss: {self.loss[epoch]:.6f} | F-1 score: {self.fscore[epoch]:.2f} | Acc: {self.acc[epoch]*100:.2f}%\n")
+                f.write(f"Epoch: {epoch+1}/{Epoch} | Loss: {self.loss[epoch]:.6f} | F-1 score: {self.fscore[epoch]:.3f} | Acc: {self.acc[epoch]*100:.2f}%\n")
             else:
-                f.write(f"Epoch: {epoch+1}/{Epoch} | Loss: {self.loss[epoch]:.6f} | F-1 score: {self.fscore[epoch]:.2f} | Acc: {self.acc[epoch]*100:.2f}%\n")
+                f.write(f"Epoch: {epoch+1}/{Epoch} | Loss: {self.loss[epoch]:.6f} | F-1 score: {self.fscore[epoch]:.3f} | Acc: {self.acc[epoch]*100:.2f}%\n")
 
     def save_acc(self, file: str):
         """ save entire acc """
