@@ -37,16 +37,17 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     batch_size = 128
     Epochs = 100
-    lr_base = 0.05
-    lr = (lr_base * batch_size) / 256
-    momentum = 0.9
-    weight_decay = 0.0001
+    lr_base = 0.5                      # default = 0.05
+    lr = (lr_base * batch_size) / 256  # default = 0.025
+    # lr = 0.00625 # decay 5 times
+    momentum = 0.9                     # default = 0.9
+    weight_decay = 0.0001              # default = 0.0001
 
     # record setting (設定實驗紀錄的儲存路徑與 log 檔)
     record_path = "/home/chenze/graduated/thesis/record/SimSiam(ResNet50)"
     phase = "Pre_train"
     model_name = "SimSiam(ResNet50)"
-    optimize = "SGD"
+    optimizer_name = "SGD"
 
 
     # augmentation
@@ -77,11 +78,12 @@ if __name__ == "__main__":
 
     # optimizer and scheduler
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
+    # optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     lr_lambda = lambda epoch: 0.5 * (1 + math.cos(epoch * math.pi / Epochs))
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
 
     # training
-    simsiam = Training(device, model, dataset, dataloader, criterion, optimizer, scheduler)
+    pre_trained = Training(device, model, dataset, dataloader, criterion, optimizer, scheduler)
 
     history_loss = []
     history_time = 0
@@ -91,7 +93,7 @@ if __name__ == "__main__":
     
 
     for epoch in range(Epochs):
-        epoch_loss, epoch_time = simsiam.train_fn(epoch)
+        epoch_loss, epoch_time = pre_trained.train_fn(epoch)
 
         history_loss.append(epoch_loss)
         history_time += epoch_time
@@ -100,14 +102,14 @@ if __name__ == "__main__":
         if epoch_loss < best_loss:
             best_epoch = epoch
             best_loss = epoch_loss
-            best_param = simsiam.model.state_dict()
+            best_param = pre_trained.model.state_dict()
 
         # save checkpoint
-        if (epoch+1) % 30 == 0:
-            simsiam.save_checkpoint(record_path, phase, epoch)
+        if (epoch+1) % 40 == 0:
+            pre_trained.save_checkpoint(record_path, phase, epoch)
 
         # save record
-        simsiam.save_log(os.path.join(record_path, "record.log"), model_name, phase, optimize, epoch, Epochs)
+        pre_trained.save_log(os.path.join(record_path, "record.log"), model_name, phase, optimizer_name, epoch, Epochs)
 
         # print training information for each epoch
         print("=" * 20)
@@ -115,20 +117,20 @@ if __name__ == "__main__":
         print("=" * 20)
     
     # save best parameter and entire training loss
-    simsiam.save_checkpoint(record_path,"Pre_train", best_epoch, best_param)
-    simsiam.save_loss(os.path.join(record_path, "loss.log"))
+    pre_trained.save_checkpoint(record_path, "Pre_train", best_epoch, best_param)
+    pre_trained.save_loss(os.path.join(record_path, "loss.log"))
     print(f"Training Complete ! Times: {history_time//3600} hr {history_time//60%60} min {history_time%60} sec")
 
     # plot loss and learning rate
     plt.plot(range(1, Epochs+1), history_loss, label="Loss")
     #plt.xticks(range(1, Epochs+1))
     plt.legend()
-    plt.title(f"Pre-trained Loss of {model_name}")
+    plt.title(f"Pre-trained Loss of {model_name} using {optimizer_name}")
     plt.savefig(os.path.join(record_path, "loss.png"))
     
     plt.clf()
-    plt.plot(range(1, Epochs+1), simsiam.lr, label="Learning rate")
+    plt.plot(range(1, Epochs+1), pre_trained.lr, label="Learning rate")
     #plt.xticks(range(1, Epochs+1))
     plt.legend()
-    plt.title(f"Pre-trained Learning Rate of {model_name}")
+    plt.title(f"Pre-trained Learning Rate of {model_name} using {optimizer_name}")
     plt.savefig(os.path.join(record_path, "learning-rate.png"))

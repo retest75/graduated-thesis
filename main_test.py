@@ -8,10 +8,11 @@ from model.simsiam import SimSiam
 from model.backbone import CustomizedResnet50
 from model.classifier import Classifier
 from train.ssl_train import Testing
+from loss.focal_loss import FocalLoss
 
 # basic configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-batch_size = 32
+batch_size = 128
 
 # record setting (設定實驗紀錄的儲存路徑與 log 檔)
 record_path = "/home/chenze/graduated/thesis/record/SimSiam(ResNet50)"
@@ -37,13 +38,14 @@ simsiam = SimSiam(CustomizedResnet50())
 model = Classifier(model=simsiam.encoder[0].resnet, n_classes=2, phase="Testing")
 
 # load weight
-weight_pth = "/home/chenze/graduated/thesis/record/SimSiam(ResNet50)/Linear-Epoch[08]-Loss[0.504947](Best).pt"
+weight_pth = "/home/chenze/graduated/thesis/record/SimSiam(ResNet50)/1/Fine-tune-Epoch[84]-Loss[0.001859]-Fscore[0.881](Best).pt"
 param = torch.load(weight_pth)
 model.load_state_dict(param)
 model = model.to(device)
 
 # criterion
-criterion = nn.CrossEntropyLoss()
+# criterion = nn.CrossEntropyLoss()
+criterion = FocalLoss(alpha=[0.1, 0.9], gamma=2)
 
 # testing
 testing = Testing(device, model, dataset, dataloader, criterion)
