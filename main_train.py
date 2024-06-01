@@ -66,7 +66,7 @@ if __name__ == "__main__":
     # dataset
     root = "/home/chenze/graduated/thesis/dataset/pre-trained"
     transform = transforms.Compose(augmentation)
-    dataset = PreTrainedDataset(root, TwoCropTransforms(transform), mode="both")
+    dataset = PreTrainedDataset(root, TwoCropTransforms(transform), mode="both", classes=2)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     # model
