@@ -28,3 +28,28 @@ class FocalLoss(nn.Module):
         loss = -alpha * p_hat_power * label * log_p_hat
 
         return loss.sum(dim=1).mean()
+
+class BinaryFocalLoss(nn.Module):
+    def __init__(self, alpha, gamma):
+        """
+        Parameter
+        ------------
+        alpha : list, [negative, positive]
+        gamma : float
+        """
+        super().__init__()
+        self.alpha = torch.tensor(alpha, device="cuda")
+        self.gamma = torch.tensor(gamma, device="cuda")
+    
+    def forward(self, y_prob, y_true):
+        """
+        Parameter
+        ------------
+        y_prob : output probabilitys with size = [batch, 1]
+        y_true : target labels with size = [batch, 1]
+        """
+        positive = self.alpha[1] * (1 - y_prob)**(self.gamma) * y_true * torch.clamp(torch.log(y_prob), -100)
+        negative = self.alpha[0] * y_prob**(self.gamma) * (1 - y_true) * torch.clamp(torch.log(1-y_prob), -100)
+        loss = -(positive + negative)
+
+        return loss.sum(dim=1).mean()
