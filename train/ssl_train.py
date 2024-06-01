@@ -241,14 +241,20 @@ class Testing(Evaluation):
         # self.acc = []                     # testing acc
         #----------------------------------------------#
         
-        self.y_prob = np.array([], dtype=np.float32) # predicted probability
-        self.y_pred = np.array([], dtype=int)        # predicted label
-        self.y_true = np.array([], dtype=int)        # true label
+        # self.y_prob = np.array([], dtype=np.float32) # predicted probability
+        # self.y_pred = np.array([], dtype=int)        # predicted label
+        # self.y_true = np.array([], dtype=int)        # true label
     
     def test_fn(self):
         total_loss = 0.0
         total_len = 0
         corrects = 0
+
+        self.loss = 0
+        self.acc = 0
+        self.y_prob = np.array([], dtype=np.float32) # predicted probability
+        self.y_pred = np.array([], dtype=int)        # predicted label
+        self.y_true = np.array([], dtype=int)        # true label
 
         self.model.eval()
         with torch.no_grad():
