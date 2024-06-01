@@ -23,4 +23,11 @@ class Classifier(nn.Module):
     
     def forward(self, x):
         return self.model(x)
-    
+if __name__ == "__main__":
+    from simsiam import SimSiam
+    from backbone import CustomizedResnet50
+
+    simsiam = SimSiam(CustomizedResnet50())
+    model = Classifier(model=simsiam.encoder[0].resnet, n_classes=1, phase=None)
+    print(model)
+   
