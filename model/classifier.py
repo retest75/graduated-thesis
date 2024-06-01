@@ -23,6 +23,7 @@ class Classifier(nn.Module):
     
     def forward(self, x):
         return self.model(x)
+
 if __name__ == "__main__":
     from simsiam import SimSiam
     from backbone import CustomizedResnet50
