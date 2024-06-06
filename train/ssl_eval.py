@@ -240,6 +240,7 @@ class Testing(Evaluation):
         plt.title("P-R curve")
         plt.xlabel("Recall")
         plt.ylabel("Precision")
+        plt.legend()
         plt.savefig(os.path.join(pth, "pr-curve.png"))
         plt.clf()
     
@@ -257,6 +258,17 @@ class Testing(Evaluation):
         plt.savefig(os.path.join(pth, "roc.png"))
         # plt.show()
         plt.clf()
+    
+    def save_indicator(self, file: str):
+        precision = self.compute_precision()
+        recall = self.compute_recall()
+        
+        with open(file, mode="a") as f:
+            f.write(f"Loss: {self.epoch_loss:.6f}\n")
+            f.write(f"Acc: {self.epoch_acc*100:.2f}%\n")
+            f.write(f"Precision: {precision:.2f}\n")
+            f.write(f"Recall: {recall:.2f}\n")
+            f.write(f"F-1 score: {self.epoch_fscore:.2f}\n")
     
 
 
