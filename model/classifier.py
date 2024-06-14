@@ -29,6 +29,9 @@ if __name__ == "__main__":
     from backbone import CustomizedResnet50
 
     simsiam = SimSiam(CustomizedResnet50())
-    model = Classifier(model=simsiam.encoder[0].resnet, n_classes=1, phase=None)
-    print(model)
+    model = Classifier(model=simsiam.encoder[0].resnet, n_classes=1, phase="Linear")
+    # for name, _ in model.named_parameters():
+    #     print(name)
+    print(model.model.layer4[-1])
+    
    
