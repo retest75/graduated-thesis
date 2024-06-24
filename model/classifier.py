@@ -1,13 +1,13 @@
 import torch.nn as nn
 
 class Classifier(nn.Module):
-    def __init__(self, model, n_classes, phase=None):
+    def __init__(self, model, n_classes, training_layer=None):
         """
         Parameter
         ------------
         model : pre-trained model
         n_classes : output classes
-        phase : only "fine-tune" or "Linear"
+        training_layer : list, choose which layer want to train. If want to train all model, set None
         """
         super().__init__()
         
@@ -16,10 +16,13 @@ class Classifier(nn.Module):
         self.model = model
         self.model.fc = nn.Linear(in_features, n_classes)
         
-        if phase == "Linear":
+        if training_layer:
             for name, param in self.model.named_parameters():
-                if "fc" not in name:
-                    param.requires_grad = False
+                param.requires_grad = False # free all parameters
+
+                for stage in training_layer:
+                    if stage in name:
+                        param.requires_grad = True # unfreeze parameters if True
     
     def forward(self, x):
         return self.model(x)
@@ -29,9 +32,11 @@ if __name__ == "__main__":
     from backbone import CustomizedResnet50
 
     simsiam = SimSiam(CustomizedResnet50())
-    model = Classifier(model=simsiam.encoder[0].resnet, n_classes=1, phase="Linear")
-    # for name, _ in model.named_parameters():
-    #     print(name)
-    print(model.model.layer4[-1])
+    model = Classifier(model=simsiam.encoder[0].resnet, n_classes=1, training_layer=["layer4", "fc"])
+    for name, param in model.named_parameters():
+        if param.requires_grad:
+            print(name)
+        # print(name)
+    
     
    
