@@ -7,9 +7,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import transforms
+from torchvision.models import ResNet50_Weights
 from torch.utils.data import DataLoader
 
-from model.backbone import CustomizedResnet50
+from baseline.resnet_modified import CustomizedResNet50
+# from model.backbone import CustomizedResnet50
 from model.simsiam import SimSiam
 from model.classifier import Classifier
 from dataset.eval_dataset import EvaluationDataset
@@ -32,13 +34,13 @@ Epochs = 30
 lr = 0.005
 momentum = 0.9               # default = 0.9
 weight_decay = 0             # default = 0
-weights = [[1.0, 1.0]]
-training_layer=["layer4", "fc"]
+weights = [[1.0, 5.0]]
+training_layer=["fc"]
 # phases = ["Fine-tune-1","Fine-tune-2", "Fine-tune-3", "Fine-tune-4", "Fine-tune-5"]
 
 
 # record setting (設定實驗紀錄的儲存路徑與 log 檔)
-record_path = f"/home/chenze/graduated/thesis/record/design-2"
+record_path = f"/home/chenze/graduated/thesis/record/baseline"
 
 # augmentation
 evaluation = [
@@ -79,18 +81,18 @@ for alpha in weights:
     os.makedirs(dst, exist_ok=True)
 
     # load pre-trained model and its weight
-    weight_pth = f"/home/chenze/graduated/thesis/record/design-2/Pre-trained-3/Pre-trained-info/Pre_train-Epoch[100]-Loss[-0.932211](Best).pt"
+    weight_pth = f"/home/chenze/graduated/thesis/record/baseline/pre-train/SL-train-Epoch[04]-Loss[0.164980]-Fscore[0.025](Best).pt"
     param = torch.load(weight_pth)
-    simsiam = SimSiam(CustomizedResnet50())
-    simsiam.load_state_dict(param)
+    model = CustomizedResNet50(weights=ResNet50_Weights.DEFAULT, n_classes=1)
+    model.load_state_dict(param)
 
     # revised pre-trained model
-    model = Classifier(model=simsiam.encoder[0].resnet, n_classes=1, training_layer=training_layer)
+    model = Classifier(model=model, n_classes=1, training_layer=training_layer)
     model = model.to(device)
 
     # criterion
-    # criterion = FocalLoss(gamma=0, weights=weight)
-    criterion = nn.BCELoss()
+    criterion = FocalLoss(gamma=1.8, weights=weight)
+    # criterion = nn.BCELoss()
 
 
     # optimizer and scheduler

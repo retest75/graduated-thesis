@@ -3,11 +3,13 @@ import os
 import torch
 import torch.nn as nn
 from torchvision import transforms
+from torchvision.models import ResNet50_Weights
 from torch.utils.data import DataLoader
 
 from dataset.eval_dataset import EvaluationDataset
 from model.simsiam import SimSiam
-from model.backbone import CustomizedResnet50
+# from model.backbone import CustomizedResnet50
+from baseline.resnet_modified import CustomizedResNet50
 from model.classifier import Classifier
 from focal_loss.focal_loss import FocalLoss
 from train.ssl_eval import Testing
@@ -15,12 +17,12 @@ from train.ssl_eval import Testing
 # basic configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 128
-param = "Evaluation-Epoch[30]-Loss[0.398397]-Fscore[0.034]" + ".pt"
-
+param = "eval-Epoch[02]-Loss[0.196968]-Fscore[0.096](Best)" + ".pt"
+weight = torch.tensor([1.0, 5.0], device=device)
 
 # record setting (設定實驗紀錄的儲存路徑與 log 檔)
-path = f"/home/chenze/graduated/thesis/record/design-2/Linear-CE"
-record_path = f"/home/chenze/graduated/thesis/record/design-2/Linear-CE/test"
+path = f"/home/chenze/graduated/thesis/record/baseline/Linear(1.8)"
+record_path = f"/home/chenze/graduated/thesis/record/baseline/Linear(1.8)/test"
 os.makedirs(record_path, exist_ok=True)
 
 # augmentation
@@ -37,8 +39,10 @@ dataset = EvaluationDataset(root, transform, mode="Both")
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
  # load pre-trained model and revised it
-simsiam = SimSiam(CustomizedResnet50())
-model = Classifier(model=simsiam.encoder[0].resnet, n_classes=1)
+# simsiam = SimSiam(CustomizedResnet50())
+model = CustomizedResNet50(weights=ResNet50_Weights.DEFAULT, n_classes=1)
+model = Classifier(model=model, n_classes=1)
+# model = Classifier(model=simsiam.encoder[0].resnet, n_classes=1)
 
 # load weight
 weight_pth = os.path.join(path, param)
@@ -47,7 +51,8 @@ model.load_state_dict(param)
 model = model.to(device)
 
 # criterion
-criterion = nn.BCELoss()
+# criterion = nn.BCELoss()
+criterion = FocalLoss(gamma=2.0, weights=weight)
 
 # testing
 testing = Testing(device, model, dataset, dataloader, criterion)

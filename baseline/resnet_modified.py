@@ -44,6 +44,8 @@ class CustomizedResNet50(nn.Module):
 if __name__ == "__main__":
     model = CustomizedResNet50(ResNet50_Weights.DEFAULT)
     summary(model, input_size=(3, 224, 224))
+    for name, _ in model.named_parameters():
+        print(name)
 
 
 
