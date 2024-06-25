@@ -42,14 +42,15 @@ class Evaluation():
             img = img.to(self.device)
             lbl = lbl.to(self.device)         # size = [n, ]
             lbl = torch.unsqueeze(lbl, dim=1) # size = [batch, 1]
+            lbl = lbl.to(dtype=torch.float32) # must turn into float if want to use BCELoss
 
             # forward-propagation
             output = self.model(img)          # output size = [batch, 1]
             output = torch.sigmoid(output)
 
             # compute loss
-            loss = self.criterion(output.squeeze(dim=1), lbl.squeeze(dim=1))
-            # loss = self.criterion(output, lbl)
+            # loss = self.criterion(output.squeeze(dim=1), lbl.squeeze(dim=1))
+            loss = self.criterion(output, lbl) # BCELoss
 
             # backward-propagation
             self.optimizer.zero_grad()
@@ -161,14 +162,15 @@ class Testing(Evaluation):
                 img = img.to(self.device)
                 lbl = lbl.to(self.device)
                 lbl = torch.unsqueeze(lbl, dim=1)
+                lbl = lbl.to(dtype=torch.float32) # BCELoss
 
                 # forward-propagation
                 output = self.model(img) # output size = [batch, 1]
                 output = torch.sigmoid(output)
 
                 # compute loss
-                loss = self.criterion(output.squeeze(dim=1), lbl.squeeze(dim=1))
-                # loss = self.criterion(output, lbl)
+                # loss = self.criterion(output.squeeze(dim=1), lbl.squeeze(dim=1))
+                loss = self.criterion(output, lbl) # BCELoss
                 
                 # compute prediction and correct
                 pred = torch.where(output > 0.5, 1, 0) # size = [batch, 1]
