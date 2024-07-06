@@ -16,14 +16,6 @@ from dataset.eval_dataset import EvaluationDataset
 from train.ssl_eval import Evaluation, Testing
 from focal_loss.focal_loss import FocalLoss
 
-#---------- README ----------#
-# this eval used to fine-tune or linear probe
-# (1) before training, setup "basic configuration            (Line: 27)
-# (2) before training, setup "record setting"                (Line: 36)
-# (3) before training, setup dataset path in dataset comment (Line: 50)
-# (4) before training, setup "save checkpoint" comment       (Line: 105)
-# (5) if want to change other backbone, revise model comment (Line: 71)
-#----------------------------#
 
 # basic configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

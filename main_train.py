@@ -24,74 +24,67 @@ print()
 #-----------------------------------#
 print("============== Start Training ===============")
 
+
+    
+# basic configuration
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+batch_size = 128
+Epochs = 100
+lr_base = 0.5                      # default = 0.05
+lr = (lr_base * batch_size) / 256  # default = 0.025
+# lr = 0.00625 # decay 5 times
+momentum = 0.9                     # default = 0.9
+weight_decay = 0.0001              # default = 0.0001
+
+# record setting (設定實驗紀錄的儲存路徑與 log 檔)
+record_path = "/home/chenze/graduated/thesis/record/SimSiam(ResNet50)"
+phase = "Pre_train"
+model_name = "SimSiam(ResNet50)"
+optimizer_name = "SGD"
+
+
+# augmentation
+augmentation = [
+    transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
+    transforms.RandomApply([
+        transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
+    ], p=0.8),
+    transforms.RandomGrayscale(p=0.2),
+    transforms.RandomApply([GaussianBlur()], p=0.5),
+    transforms.RandomHorizontalFlip(),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ]
+
+# dataset
+root = "/home/chenze/graduated/thesis/dataset/pre-trained"
+transform = transforms.Compose(augmentation)
+dataset = PreTrainedDataset(root, TwoCropTransforms(transform), mode="both", classes=2)
+dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+# model
+model = SimSiam(CustomizedResnet50())
+model = model.to(device)
+
+# criterion
+criterion = nn.CosineSimilarity()
+
+# optimizer and scheduler
+optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
+# optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+lr_lambda = lambda epoch: 0.5 * (1 + math.cos(epoch * math.pi / Epochs))
+scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
+
+# training
+pre_trained = Training(device, model, dataset, dataloader, criterion, optimizer, scheduler)
+
+history_loss = []
+history_time = 0
+best_loss = float("inf")
+best_param = None
+best_epoch = None
+    
 if __name__ == "__main__":
-    #---------- README ----------#
-    # (1) before training, setup "basic configuration            (Line: 36)
-    # (2) before training, setup "record setting"                (Line: 45)
-    # (3) before training, setup dataset path in dataset comment (Line: 65)
-    # (4) before training, setup "save checkpoint" comment       (Line: 105)
-    # (5) if want to change other backbone, revise model comment (Line: 71)
-    #----------------------------#
-    
-    # basic configuration
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    batch_size = 128
-    Epochs = 100
-    lr_base = 0.5                      # default = 0.05
-    lr = (lr_base * batch_size) / 256  # default = 0.025
-    # lr = 0.00625 # decay 5 times
-    momentum = 0.9                     # default = 0.9
-    weight_decay = 0.0001              # default = 0.0001
-
-    # record setting (設定實驗紀錄的儲存路徑與 log 檔)
-    record_path = "/home/chenze/graduated/thesis/record/SimSiam(ResNet50)"
-    phase = "Pre_train"
-    model_name = "SimSiam(ResNet50)"
-    optimizer_name = "SGD"
-
-
-    # augmentation
-    augmentation = [
-        transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
-        transforms.RandomApply([
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
-        ], p=0.8),
-        transforms.RandomGrayscale(p=0.2),
-        transforms.RandomApply([GaussianBlur()], p=0.5),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ]
-
-    # dataset
-    root = "/home/chenze/graduated/thesis/dataset/pre-trained"
-    transform = transforms.Compose(augmentation)
-    dataset = PreTrainedDataset(root, TwoCropTransforms(transform), mode="both", classes=2)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-
-    # model
-    model = SimSiam(CustomizedResnet50())
-    model = model.to(device)
-
-    # criterion
-    criterion = nn.CosineSimilarity()
-
-    # optimizer and scheduler
-    optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
-    # optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    lr_lambda = lambda epoch: 0.5 * (1 + math.cos(epoch * math.pi / Epochs))
-    scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
-
-    # training
-    pre_trained = Training(device, model, dataset, dataloader, criterion, optimizer, scheduler)
-
-    history_loss = []
-    history_time = 0
-    best_loss = float("inf")
-    best_param = None
-    best_epoch = None
-    
-
     for epoch in range(Epochs):
         epoch_loss, epoch_time = pre_trained.train_fn(epoch)
 
