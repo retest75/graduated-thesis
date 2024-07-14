@@ -13,6 +13,8 @@ Since these dataset have a lot of negatives, we use contrastive learning to perf
 
 In this study, we also use focal loss to address class imbalanced problem. The implement of focal loss can be downloaded from [Here](https://github.com/mathiaszinnen/focal_loss_torch). It will teach you how to install it.
 
+If you want to see the code of RETFound for my version, click [HERE](https://github.com/retest75/RETFound_MAE).
+
 ## Reference
 [1] [Exploring Simple Siamese Representaion Learning (2021 CVPR)](https://arxiv.org/abs/2011.10566)
 
