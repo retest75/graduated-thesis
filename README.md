@@ -15,6 +15,11 @@ In this study, we also use focal loss to address class imbalanced problem. The i
 
 If you want to see the code of RETFound for my version, click [HERE](https://github.com/retest75/RETFound_MAE).
 
+## Visualize
+![visualize](./img/vosualize-compare.png)
+
+In this research, we use **Grad-CAM** to visualize behavior of model and show which region the model would focus on. Grad-CAM is another package, you can download from [HERE](https://github.com/jacobgil/pytorch-grad-cam) and then install it. Note that Grad-CAM is **suitable for CNNs-based architecture**, if you want to visualize ViT-based mdoel, see my another repository ([HERE](https://github.com/retest75/RETFound_MAE)).
+
 ## Reference
 [1] [Exploring Simple Siamese Representaion Learning (2021 CVPR)](https://arxiv.org/abs/2011.10566)
 
